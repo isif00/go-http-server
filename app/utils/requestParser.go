@@ -22,6 +22,18 @@ func ParseRequest(requestLine string, conn net.Conn) (*types.HttpRequest, error)
 		conn.Write([]byte(GetStatus(400, "Bad Request")))
 	}
 
+	// Split user agent
+	var userAgent string
+	for _, header := range splitHeaders {
+		if strings.HasPrefix(header, "User-Agent:") {
+			userAgentParts := strings.SplitN(header, " ", 2)
+			if len(userAgentParts) == 2 {
+				userAgent = userAgentParts[1]
+			}
+		}
+	}
+
+	req.UserAgent = userAgent
 	req.Path = splitRequest[1]
 
 	return &req, nil

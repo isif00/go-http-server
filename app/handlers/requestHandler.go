@@ -31,22 +31,22 @@ func RequestHandler(conn net.Conn) {
 	switch path := parsedRequest.Path; {
 
 	case path == "/":
-		response = utils.GetStatus(200, "OK")
+		response = utils.GetStatus(200, "OK\r\n")
 
 	case strings.HasPrefix(path, "/echo/"):
 		parts := strings.SplitN(path, "/", 3)
 		if len(parts) < 3 {
-			conn.Write([]byte(utils.GetStatus(400, "Bad Request")))
+			conn.Write([]byte(utils.GetStatus(400, "Bad Request\r\n")))
 			return
 		}
 		message := parts[2]
-		response = fmt.Sprintf("%s Content-Type: text/plain\r\nContent-Length: %d\r\n\r\n%s", utils.GetStatus(200, "OK"), len(message), message)
+		response = fmt.Sprintf("%sContent-Type: text/plain\r\nContent-Length: %d\r\n\r\n%s", utils.GetStatus(200, "OK"), len(message), message)
 
 	case path == "/user-agent":
-		response = fmt.Sprintf("%s Content-Type: text/plain\r\nContent-Length: %d\r\n\r\n%s", utils.GetStatus(200, "OK"), len(requestLine), requestLine)
+		response = fmt.Sprintf("%sContent-Type: text/plain\r\nContent-Length: %d\r\n\r\n%s", utils.GetStatus(200, "OK"), len(parsedRequest.UserAgent), parsedRequest.UserAgent)
 
 	default:
-		response = utils.GetStatus(404, "Not Found")
+		response = utils.GetStatus(404, "Not Found\r\n")
 	}
 
 	conn.Write([]byte(response))
