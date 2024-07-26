@@ -50,8 +50,9 @@ func ParseRequest(requestLine string, conn net.Conn) (*types.HttpRequest, error)
 		if strings.HasPrefix(header, "Accept-Encoding:") {
 			contentEncodingParts := strings.SplitN(header, " ", 2)
 			if len(contentEncodingParts) == 2 {
-				contentEncodingMethods := strings.Split(contentEncodingParts[1], ",")
+				contentEncodingMethods := strings.Split(contentEncodingParts[1], ", ")
 				for _, method := range contentEncodingMethods {
+					fmt.Println(method)
 					if method == "gzip" {
 						contentEncoding = method
 					}
