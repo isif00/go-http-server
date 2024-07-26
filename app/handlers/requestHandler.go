@@ -29,6 +29,9 @@ func RequestHandler(conn net.Conn) {
 
 	var response string
 
+	var method = parsedRequest.Method
+	var body = parsedRequest.Body
+
 	switch path := parsedRequest.Path; {
 
 	case path == "/":
@@ -49,14 +52,23 @@ func RequestHandler(conn net.Conn) {
 	case strings.HasPrefix(path, "/files/"):
 		fileName := strings.TrimPrefix(path, "/files/")
 		dir := os.Args[2]
-		data, err := os.ReadFile(dir + "/" + fileName)
-		if err != nil {
-			fmt.Printf("Error reading file: %v\n", err)
-			conn.Write([]byte(utils.GetStatus(404, "Not Found\r\n")))
-			return
+		if method == "GET" {
+			data, err := os.ReadFile(dir + "/" + fileName)
+			if err != nil {
+				fmt.Printf("Error reading file: %v\n", err)
+				conn.Write([]byte(utils.GetStatus(404, "Not Found\r\n")))
+				return
+			}
+
+			response = fmt.Sprintf("%sContent-Type: application/octet-stream\r\nContent-Length: %d\r\n\r\n%s", utils.GetStatus(200, "OK"), len(data), string(data))
+
+		} else if method == "POST" {
+			file := []byte(body)
+			if err := os.WriteFile(dir+"/"+fileName, file, 0644); err == nil {
+				response = utils.GetStatus(201, "Created\r\n")
+			}
 		}
 
-		response = fmt.Sprintf("HTTP/1.1 200 OK\r\nContent-Type: application/octet-stream\r\nContent-Length: %d\r\n\r\n%s", len(data), string(data))
 	default:
 		response = utils.GetStatus(404, "Not Found\r\n")
 	}
