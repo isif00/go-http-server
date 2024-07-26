@@ -1,6 +1,8 @@
 package handlers
 
 import (
+	"bytes"
+	"compress/gzip"
 	"fmt"
 	"net"
 	"os"
@@ -46,9 +48,19 @@ func RequestHandler(conn net.Conn) {
 		}
 		message := parts[2]
 		if contentEncoding == "gzip" {
-			response = fmt.Sprintf("%sContent-Type: text/plain\r\nContent-Encoding: gzip\r\nContent-Length: %d\r\n\r\n%s", utils.GetStatus(200, "OK"), len(message), message)
+			var buf bytes.Buffer
+			w := gzip.NewWriter(&buf)
+			_, err := w.Write([]byte(message))
+			if err != nil {
+				conn.Write([]byte(utils.GetStatus(500, "Internal Server Error\r\n")))
+				return
+			}
+			w.Close()
+			response = fmt.Sprintf("%sContent-Type: text/plain\r\nContent-Encoding: gzip\r\nContent-Length: %d\r\n\r\n%s",
+				utils.GetStatus(200, "OK"), buf.Len(), buf.Bytes())
 		} else {
-			response = fmt.Sprintf("%sContent-Type: text/plain\r\nContent-Length: %d\r\n\r\n%s", utils.GetStatus(200, "OK"), len(message), message)
+			response = fmt.Sprintf("%sContent-Type: text/plain\r\nContent-Length: %d\r\n\r\n%s",
+				utils.GetStatus(200, "OK"), len(message), message)
 		}
 
 	case strings.HasPrefix(path, "/user-agent"):
@@ -80,4 +92,5 @@ func RequestHandler(conn net.Conn) {
 
 	conn.Write([]byte(response))
 	conn.Close()
+
 }
