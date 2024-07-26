@@ -31,6 +31,7 @@ func RequestHandler(conn net.Conn) {
 
 	var method = parsedRequest.Method
 	var body = parsedRequest.Body
+	var contentEncoding = parsedRequest.ContentEncoding
 
 	switch path := parsedRequest.Path; {
 
@@ -44,7 +45,11 @@ func RequestHandler(conn net.Conn) {
 			return
 		}
 		message := parts[2]
-		response = fmt.Sprintf("%sContent-Type: text/plain\r\nContent-Length: %d\r\n\r\n%s", utils.GetStatus(200, "OK"), len(message), message)
+		if contentEncoding == "gzip" {
+			response = fmt.Sprintf("%sContent-Type: text/plain\r\nContent-Encoding: gzip\r\nContent-Length: %d\r\n\r\n%s", utils.GetStatus(200, "OK"), len(message), message)
+		} else {
+			response = fmt.Sprintf("%sContent-Type: text/plain\r\nContent-Length: %d\r\n\r\n%s", utils.GetStatus(200, "OK"), len(message), message)
+		}
 
 	case strings.HasPrefix(path, "/user-agent"):
 		response = fmt.Sprintf("%sContent-Type: text/plain\r\nContent-Length: %d\r\n\r\n%s", utils.GetStatus(200, "OK"), len(parsedRequest.UserAgent), parsedRequest.UserAgent)

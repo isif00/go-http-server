@@ -44,10 +44,22 @@ func ParseRequest(requestLine string, conn net.Conn) (*types.HttpRequest, error)
 		}
 	}
 
+	// Split Content-Encoding
+	var contentEncoding string
+	for _, header := range splitHeaders {
+		if strings.HasPrefix(header, "Accept-Encoding:") {
+			contentEncodingParts := strings.SplitN(header, " ", 2)
+			if len(contentEncodingParts) == 2 {
+				contentEncoding = contentEncodingParts[1]
+			}
+		}
+	}
+
 	req.Method = splitRequest[0]
 	req.Path = splitRequest[1]
 	req.UserAgent = userAgent
 	req.Body = bodyPart
+	req.ContentEncoding = contentEncoding
 
 	return &req, nil
 }
