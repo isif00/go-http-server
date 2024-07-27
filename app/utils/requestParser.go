@@ -33,38 +33,29 @@ func ParseRequest(requestLine string, conn net.Conn) (*types.HttpRequest, error)
 		return nil, fmt.Errorf("bad request")
 	}
 
-	// Split user agent
-	var userAgent string
-	for _, header := range splitHeaders {
-		if strings.HasPrefix(header, "User-Agent:") {
-			userAgentParts := strings.SplitN(header, " ", 2)
-			if len(userAgentParts) == 2 {
-				userAgent = userAgentParts[1]
-			}
+	// Extract headers
+	headers := make(map[string]string)
+	for _, header := range splitHeaders[1:] {
+		parts := strings.SplitN(header, ": ", 2)
+		if len(parts) == 2 {
+			headers[parts[0]] = parts[1]
 		}
 	}
 
-	// Split Content-Encoding
+	// Get content encoding
 	var contentEncoding string
-	for _, header := range splitHeaders {
-		if strings.HasPrefix(header, "Accept-Encoding:") {
-			contentEncodingParts := strings.SplitN(header, " ", 2)
-			if len(contentEncodingParts) == 2 {
-				contentEncodingMethods := strings.Split(contentEncodingParts[1], ", ")
-				for _, method := range contentEncodingMethods {
-					fmt.Println(method)
-					if method == "gzip" {
-						contentEncoding = method
-					}
-				}
-			}
+	contentEncodingMethods := strings.Split(headers["Accept-Encoding"], ", ")
+	for _, method := range contentEncodingMethods {
+		fmt.Println(method)
+		if method == "gzip" {
+			contentEncoding = method
 		}
 	}
 
 	req.Method = splitRequest[0]
 	req.Path = splitRequest[1]
-	req.UserAgent = userAgent
 	req.Body = bodyPart
+	req.UserAgent = headers["User-Agent"]
 	req.ContentEncoding = contentEncoding
 
 	return &req, nil

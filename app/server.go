@@ -1,21 +1,31 @@
 package main
 
 import (
+	"flag"
 	"fmt"
 	"net"
 	"os"
 
+	"github.com/codecrafters-io/http-server-starter-go/app/config"
 	"github.com/codecrafters-io/http-server-starter-go/app/handlers"
 )
 
 func main() {
-	// You can use print statements as follows for debugging, they'll be visible when running tests.
-	fmt.Println("Logs from your program will appear here!")
+	// Parse command line flags
+	flag.IntVar(&config.Port, "port", 4221, "The server port")
+	flag.StringVar(&config.Directory, "directory", ".", "The server directory")
+
+	flag.Parse()
+
+	host := fmt.Sprintf("0.0.0.0:%d", config.Port)
 
 	// Bind to port 4221
-	l, err := net.Listen("tcp", "0.0.0.0:4221")
+	l, err := net.Listen("tcp", host)
+	fmt.Println("Listening on " + host)
+
 	if err != nil {
 		fmt.Println("Failed to bind to port 4221")
+		fmt.Println(err.Error())
 		os.Exit(1)
 	}
 

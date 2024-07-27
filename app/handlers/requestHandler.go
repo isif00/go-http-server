@@ -8,6 +8,7 @@ import (
 	"os"
 	"strings"
 
+	"github.com/codecrafters-io/http-server-starter-go/app/config"
 	"github.com/codecrafters-io/http-server-starter-go/app/utils"
 )
 
@@ -68,7 +69,7 @@ func RequestHandler(conn net.Conn) {
 
 	case strings.HasPrefix(path, "/files/"):
 		fileName := strings.TrimPrefix(path, "/files/")
-		dir := os.Args[2]
+		dir := config.Directory
 		if method == "GET" {
 			data, err := os.ReadFile(dir + "/" + fileName)
 			if err != nil {
