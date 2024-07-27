@@ -12,13 +12,13 @@ import (
 	"github.com/codecrafters-io/http-server-starter-go/app/utils"
 )
 
-func RequestHandler(conn net.Conn) {
+func RequestHandler(conn net.Conn) error {
 	// Read the request
 	req := make([]byte, 1024)
 	n, err := conn.Read(req)
 	if err != nil {
 		fmt.Println("Error reading request:", err.Error())
-		return
+		return err
 	}
 
 	requestLine := string(req[:n])
@@ -27,7 +27,7 @@ func RequestHandler(conn net.Conn) {
 	parsedRequest, nil := utils.ParseRequest(requestLine, conn)
 	if nil != nil {
 		conn.Write([]byte(utils.GetStatus(400, "Bad Request")))
-		return
+		return err
 	}
 
 	var response string
@@ -45,7 +45,7 @@ func RequestHandler(conn net.Conn) {
 		parts := strings.SplitN(path, "/", 3)
 		if len(parts) < 3 {
 			conn.Write([]byte(utils.GetStatus(400, "Bad Request\r\n")))
-			return
+			return err
 		}
 		message := parts[2]
 		if contentEncoding == "gzip" {
@@ -54,7 +54,7 @@ func RequestHandler(conn net.Conn) {
 			_, err := w.Write([]byte(message))
 			if err != nil {
 				conn.Write([]byte(utils.GetStatus(500, "Internal Server Error\r\n")))
-				return
+				return err
 			}
 			w.Close()
 			response = fmt.Sprintf("%sContent-Type: text/plain\r\nContent-Encoding: gzip\r\nContent-Length: %d\r\n\r\n%s",
@@ -75,7 +75,7 @@ func RequestHandler(conn net.Conn) {
 			if err != nil {
 				fmt.Printf("Error reading file: %v\n", err)
 				conn.Write([]byte(utils.GetStatus(404, "Not Found\r\n")))
-				return
+				return err
 			}
 
 			response = fmt.Sprintf("%sContent-Type: application/octet-stream\r\nContent-Length: %d\r\n\r\n%s", utils.GetStatus(200, "OK"), len(data), string(data))
@@ -93,5 +93,5 @@ func RequestHandler(conn net.Conn) {
 
 	conn.Write([]byte(response))
 	conn.Close()
-
+	return nil
 }
